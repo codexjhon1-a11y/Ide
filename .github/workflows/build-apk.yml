@@ -26,10 +26,10 @@ jobs:
           echo "/tmp/gradle-8.13/bin" >> "$GITHUB_PATH"
 
       - name: Build APK
-        working-directory: WAE_Python_IDE_Android
+        working-directory: wae-ide/WAE_Python_IDE_Android
         run: gradle --no-daemon assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
           name: wae-python-ide-debug-apk
-          path: WAE_Python_IDE_Android/app/build/outputs/apk/debug/app-debug.apk
+          path: wae-ide/WAE_Python_IDE_Android/app/build/outputs/apk/debug/app-debug.apk

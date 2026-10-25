@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>WAE Python IDE</title>
+<style>
+:root{color-scheme:dark;--bg:#101319;--panel:#191e27;--panel2:#202735;--border:#303949;--text:#edf2fa;--muted:#9ca9bc;--accent:#68d6c5;--red:#f04452;--green:#71d49a;--yellow:#f2c66d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,sans-serif}
+header{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--border);background:#151a22;position:sticky;top:0;z-index:5}
+.brand{font-weight:800;letter-spacing:.4px}.brand span{color:var(--accent)}.version{font-size:11px;color:var(--muted)}
+nav{display:flex;overflow:auto;gap:5px;padding:9px;background:#141922;border-bottom:1px solid var(--border)}
+nav button,.tool{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:9px 11px;border-radius:9px;white-space:nowrap}
+nav button.active{background:#23413f;border-color:#3b7770;color:#b9fff1}
+main{padding:12px;max-width:1000px;margin:auto}.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.run{background:var(--red);color:white;border:0;font-weight:800;padding:10px 16px;border-radius:10px}
+.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:9px}
+.filename{color:var(--muted);font-size:12px;margin-left:auto}
+.editorbox{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#0d1117;min-height:300px}
+.lines{padding:13px 9px;color:#667386;text-align:right;white-space:pre;user-select:none;background:#111722;min-width:38px;font:13px/1.65 ui-monospace,monospace}
+textarea{width:100%;min-height:300px;resize:vertical;border:0;outline:0;background:transparent;color:#dce7f7;padding:13px 12px;font:13px/1.65 ui-monospace,SFMono-Regular,monospace;tab-size:4;white-space:pre;overflow:auto}
+.panel{margin-top:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);overflow:hidden}
+.panelhead{padding:10px 12px;border-bottom:1px solid var(--border);font-weight:700;display:flex;justify-content:space-between}
+.output{padding:12px;min-height:65px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.6 ui-monospace,monospace;color:#dce7f7}
+.err{color:#ff8b94}.ok{color:var(--green)}.muted{color:var(--muted)}.section{display:none}.section.active{display:block}
+.card{background:var(--panel);border:1px solid var(--border);padding:14px;border-radius:12px;margin-bottom:10px}
+.card h3{margin:0 0 8px}.suggestions{display:none;position:sticky;bottom:8px;margin-top:7px;background:#202a38;border:1px solid #3a4b62;border-radius:10px;overflow:hidden}
+.suggestion{padding:10px 12px;display:flex;justify-content:space-between}.suggestion strong{color:#9de6db}.hint{font-size:11px;color:var(--muted)}
+input{background:#0d1117;color:var(--text);border:1px solid var(--border);padding:10px;border-radius:8px;width:100%;margin:5px 0 10px}
+@media(min-width:700px){main{padding:20px}.editorbox textarea,.lines{min-height:440px}.editorbox textarea{font-size:14px}}
+</style>
+</head>
+<body>
+<header><div class="brand">WAE <span>PYTHON IDE</span><div class="version">WE ARE ENGINEERS · v0.2</div></div><button class="tool" onclick="saveCode()">Save</button></header>
+<nav id="nav">
+<button class="active" data-tab="editor">Editor</button><button data-tab="files">Files</button><button data-tab="libraries">Libraries</button><button data-tab="terminal">Terminal</button><button data-tab="debug">Debug</button>
+</nav>
+<main>
+<section id="editor" class="section active">
+<div class="toolbar"><button class="run" onclick="runCode()">▶ RUN</button><button class="secondary" onclick="newFile()">New</button><button class="secondary" onclick="saveCode()">Save</button><button class="secondary" onclick="clearOutput()">Clear output</button><span class="filename" id="filename">main.py</span></div>
+<div class="editorbox"><div class="lines" id="lines">1</div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">print("Hello from WAE Python IDE!")
+name = "Engineer"
+print(f"Welcome, {name}!")
+
+for number in range(1, 4):
+    print("Run:", number)</textarea></div>
+<div class="suggestions" id="suggestions"><div class="suggestion"><span><strong id="suggestText">print</strong> <span class="hint">· Python suggestion</span></span><span class="hint">SPACE accept · ESC dismiss</span></div></div>
+<div class="panel"><div class="panelhead"><span>Output Console</span><span class="muted" id="runStatus">Python runtime ready</span></div><div class="output" id="output">Press the red RUN button to execute your Python code.</div></div>
+</section>
+<section id="files" class="section">
+<div class="card"><h3>Project files</h3><p class="muted">Saved files in this starter build are stored inside the app's private project folder.</p><button class="secondary" onclick="saveCode()">Save current file</button> <button class="secondary" onclick="refreshFiles()">Refresh list</button><div id="fileList" class="output">main.py · current editor buffer</div><p id="fileStatus" class="muted">Files saved by the Android app appear here.</p></div>
+</section>
+<section id="libraries" class="section">
+<div class="card"><h3>Library Manager</h3><p class="muted">The embedded runtime bundles packages at APK build time. For packages installed in Termux, use the terminal command below.</p><label for="pkg">Package / command</label><input id="pkg" value="python -m pip install numpy" /><button class="secondary" onclick="installInTermux()">Run install command in Termux</button><p id="libStatus" class="muted">Package installation needs Termux setup or a new APK build with bundled dependencies.</p></div>
+<div class="card"><h3>WAE modules</h3><p class="muted">Future modules: wae.math, wae.physics, wae.science, wae.ai, wae.simulation, wae.engineering.</p></div>
+</section>
+<section id="terminal" class="section">
+<div class="card"><h3>Termux bridge</h3><p class="muted">Termux must be installed. Enable the app's “Run commands in Termux environment” permission and set allow-external-apps=true in Termux settings.</p><label for="command">Command</label><input id="command" value="python --version" /><button class="secondary" onclick="sendTerminal()">Send command to Termux</button><div class="output" id="terminalStatus">Termux command results appear in Termux in this starter version.</div></div>
+</section>
+<section id="debug" class="section">
+<div class="card"><h3>Errors & Debug</h3><p class="muted">When Python execution fails, the traceback and source line are shown here. Tap “Go to error line” to jump back to the editor.</p><div class="output" id="debugOutput">No errors yet.</div><button class="secondary" id="jumpBtn" onclick="jumpToError()" disabled>Go to error line</button></div>
+</section>
+</main>
+<script>
+const code=document.getElementById('code'),lines=document.getElementById('lines'),out=document.getElementById('output');
+let errorLine=0, fileName='main.py', lastTrace='';
+const known=['print','len','range','str','int','float','list','dict','set','tuple','sum','min','max','sorted','enumerate','zip','input','open','type','help','abs','all','any','bool','breakpoint','classmethod','compile','dir','filter','getattr','hasattr','isinstance','issubclass','iter','map','next','object','property','repr','reversed','round','slice','staticmethod','super','vars','Exception','ValueError','TypeError','NameError','IndexError','KeyError','True','False','None','and','or','not','if','elif','else','for','while','def','return','class','try','except','finally','with','import','from','as','raise','yield','async','await','self'];
+function refreshLines(){const count=code.value.split('\n').length;lines.textContent=Array.from({length:count},(_,i)=>i+1).join('\n');lines.scrollTop=code.scrollTop}
+code.addEventListener('input',refreshLines);code.addEventListener('scroll',()=>{lines.scrollTop=code.scrollTop});
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===b.dataset.tab))}));
+function currentWord(){let p=code.selectionStart, before=code.value.slice(0,p);return (before.match(/[A-Za-z_][A-Za-z_0-9]*$/)||[''])[0]}
+function showSuggestion(){let w=currentWord(),box=document.getElementById('suggestions');if(!w){box.style.display='none';return}let found=known.find(x=>x.toLowerCase().startsWith(w.toLowerCase())&&x!==w);if(found){document.getElementById('suggestText').textContent=found;box.dataset.value=found;box.style.display='block'}else box.style.display='none'}
+code.addEventListener('input',showSuggestion);
+code.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){document.getElementById('suggestions').style.display='none';return}
+ if(e.key===' '&&document.getElementById('suggestions').style.display==='block'){
+  const word=currentWord(),suggest=document.getElementById('suggestions').dataset.value;
+  if(word&&suggest){e.preventDefault();const start=code.selectionStart-word.length,end=code.selectionEnd;code.setRangeText(suggest+' ',start,end,'end');refreshLines();showSuggestion();return}
+ }
+ if(e.key==='Tab'){e.preventDefault();const s=code.selectionStart;code.setRangeText('    ',s,code.selectionEnd,'end');refreshLines();showSuggestion()}
+});
+function clearOutput(){out.textContent='';document.getElementById('debugOutput').textContent='No errors yet.';errorLine=0;lastTrace='';document.getElementById('jumpBtn').disabled=true}
+function runCode(){
+ const source=code.value;document.getElementById('runStatus').textContent='Running…';out.textContent='';
+ if(window.WAE&&typeof WAE.runPython==='function'){
+  try{const r=JSON.parse(WAE.runPython(source));out.textContent=(r.stdout||'')+(r.stderr?'\n'+r.stderr:'');errorLine=Number(r.line||0);lastTrace=r.stderr||'';document.getElementById('runStatus').textContent=r.ok?'Finished':'Error';document.getElementById('debugOutput').textContent=r.stderr||'No errors.';document.getElementById('jumpBtn').disabled=!errorLine;if(!r.stderr&&!r.stdout)out.textContent='Program finished with no output.';if(errorLine){document.querySelector('[data-tab="debug"]').click()}return}catch(err){out.textContent='Runtime bridge error: '+err;document.getElementById('runStatus').textContent='Bridge error';return}
+ }
+ out.textContent='Python runtime is available only inside the Android APK. This HTML preview cannot execute Python.';
+ document.getElementById('runStatus').textContent='Preview mode';
+}
+function jumpToError(){if(!errorLine)return;document.querySelector('[data-tab="editor"]').click();let pos=0,arr=code.value.split('\n');for(let i=0;i<Math.min(errorLine-1,arr.length);i++)pos+=arr[i].length+1;code.focus();code.setSelectionRange(pos,pos);let before=code.value.slice(0,pos);let row=before.split('\n').length;code.scrollTop=Math.max(0,(row-5)*22);refreshLines()}
+function saveCode(){if(window.WAE){let r=JSON.parse(WAE.saveFile(fileName,code.value));document.getElementById('fileStatus').textContent=r.ok?'Saved: '+r.name:r.error;out.textContent='Saved '+(r.name||fileName)+' to app storage.';refreshFiles()}else{try{localStorage.setItem('wae:'+fileName,code.value);out.textContent='Saved in browser storage (preview mode).';document.getElementById('fileStatus').textContent='Saved in this browser only.'}catch(e){out.textContent='Save failed: '+e}}}
+function refreshFiles(){const box=document.getElementById('fileList');if(window.WAE&&WAE.listFiles){try{const r=JSON.parse(WAE.listFiles());if(!r.ok){box.textContent=r.error;return}box.innerHTML='';if(!r.files.length){box.textContent='No saved files yet.';return}r.files.forEach(name=>{const row=document.createElement('div');row.style.display='flex';row.style.gap='8px';row.style.alignItems='center';row.style.marginBottom='8px';const open=document.createElement('button');open.className='secondary';open.textContent='Open '+name;open.onclick=()=>{const f=JSON.parse(WAE.readFile(name));if(f.ok){code.value=f.contents;fileName=f.name;document.getElementById('filename').textContent=fileName;refreshLines();document.querySelector('[data-tab=editor]').click()}else document.getElementById('fileStatus').textContent=f.error};const del=document.createElement('button');del.className='secondary';del.textContent='Delete';del.onclick=()=>{if(confirm('Delete '+name+'?')){WAE.deleteFile(name);refreshFiles()}};row.append(open,del);box.append(row)})}catch(e){box.textContent='Could not load files: '+e}}else{const keys=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('wae:'))keys.push(k.slice(4))}box.textContent=keys.length?'Browser saved files: '+keys.join(', '):'No browser-saved files yet.'}}
+function newFile(){if(!confirm('Create a new file? Save current code first if needed.'))return;code.value='';fileName='untitled.py';document.getElementById('filename').textContent=fileName;refreshLines();clearOutput()}
+function sendTerminal(){const cmd=document.getElementById('command').value;if(!cmd.trim())return;if(window.WAE){const r=JSON.parse(WAE.openTermux(cmd));document.getElementById('terminalStatus').textContent=r.message||r.error||JSON.stringify(r)}else document.getElementById('terminalStatus').textContent='Termux bridge works only in the Android APK.'}
+function installInTermux(){document.getElementById('command').value=document.getElementById('pkg').value;sendTerminal();document.querySelector('[data-tab="terminal"]').click()}
+refreshLines();refreshFiles();
+</script>
+</body>
+</html>
